@@ -1,0 +1,25 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(ls:*)",
+      "Bash(npm run build:*)",
+      "Bash(npm run dev:*)",
+      "Bash(netstat:*)",
+      "Bash(findstr:*)",
+      "Bash(tasklist:*)",
+      "Bash(taskkill /F /PID 69864)",
+      "Bash(taskkill //F //PID 69864)",
+      "Bash(if exist \".next\\dev\\lock\" del /F \".next\\dev\\lock\")",
+      "Bash(rm:*)",
+      "Bash(find:*)",
+      "Bash(python scripts/inspect_pdf.py:*)",
+      "Bash(tesseract:*)",
+      "Bash(pip install:*)",
+      "Bash(python scripts/parse_mapping.py:*)",
+      "Bash(python scripts/extract_pdf_content.py:*)",
+      "Bash(python scripts/analyze_pdf_structure.py:*)",
+      "Bash(python scripts/fix_ocr_texts.py:*)",
+      "Bash(python:*)"
+    ]
+  }
+}

@@ -1,0 +1,11 @@
+{
+    "HomePage": {
+        "title": "동서대학교 애니메이션학과",
+        "subtitle": "2024 졸업작품전"
+    },
+    "Navigation": {
+        "home": "홈",
+        "projects": "작품목록",
+        "about": "소개"
+    }
+}

@@ -1,0 +1,11 @@
+{
+    "HomePage": {
+        "title": "Dongseo University Animation",
+        "subtitle": "Graduation Exhibition 2024"
+    },
+    "Navigation": {
+        "home": "Home",
+        "projects": "Projects",
+        "about": "About"
+    }
+}

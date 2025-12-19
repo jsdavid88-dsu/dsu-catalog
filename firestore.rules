@@ -1,0 +1,32 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Projects collection
+    match /projects/{project} {
+      // Anyone can read projects
+      allow read: if true;
+      
+      // Authenticated users can create projects
+      // Must include their UID in createdBy field
+      allow create: if request.auth != null 
+        && request.resource.data.createdBy == request.auth.uid;
+      
+      // Update/Delete: Only admins or the user who created it
+      allow update, delete: if request.auth != null && (
+        // Check if user is an admin
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin'
+        // OR user is the creator
+        || resource.data.createdBy == request.auth.uid
+      );
+    }
+    
+    // Users collection (for role management)
+    match /users/{userId} {
+      // Authenticated users can read their own role
+      allow read: if request.auth != null;
+      // Only admins can create/modify user roles (managed via Firebase Console)
+      allow write: if false;
+    }
+  }
+}
