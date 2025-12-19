@@ -5,6 +5,8 @@ import { Project } from '@/types/project';
 import { Link } from '@/i18n/navigation';
 import { ArrowLeft } from 'lucide-react';
 import { MOCK_DATA } from '@/data/projects_v2';
+import ImageModal from '@/components/common/ImageModal';
+
 
 interface ProjectDetailProps {
     projectId: string;
@@ -14,6 +16,9 @@ interface ProjectDetailProps {
 
 export default function ProjectDetailClient({ projectId, initialProject, locale }: ProjectDetailProps) {
     const [project, setProject] = useState<Project | null>(initialProject);
+    const [modalOpen, setModalOpen] = useState(false);
+    const [modalImage, setModalImage] = useState({ src: '', alt: '' });
+
 
     useEffect(() => {
         // Hydrate from localStorage if in mock mode
@@ -45,6 +50,11 @@ export default function ProjectDetailClient({ projectId, initialProject, locale 
 
     // Default empty array if no artworks
     const artworks = project.artworkUrls || [];
+
+    const openModal = (src: string, alt: string) => {
+        setModalImage({ src, alt });
+        setModalOpen(true);
+    };
 
     return (
         <div className="min-h-screen bg-zinc-950 text-white pb-32">
@@ -98,8 +108,9 @@ export default function ProjectDetailClient({ projectId, initialProject, locale 
                                     <div key={url} className="break-inside-avoid">
                                         <img
                                             src={url}
-                                            alt={`Artwork ${i}`}
-                                            className="w-full rounded-lg bg-neutral-900 hover:opacity-90 transition cursor-zoom-in"
+                                            alt={`${project.title?.[locale]} - Artwork ${i + 1}`}
+                                            className="w-full rounded-lg bg-neutral-900 hover:opacity-90 hover:scale-[1.02] transition-all cursor-pointer"
+                                            onClick={() => openModal(url, `${project.title?.[locale]} - Artwork ${i + 1}`)}
                                         />
                                     </div>
                                 ))}
@@ -146,6 +157,14 @@ export default function ProjectDetailClient({ projectId, initialProject, locale 
                     </div>
                 </div>
             </div>
+
+            {/* Image Modal */}
+            <ImageModal
+                isOpen={modalOpen}
+                imageSrc={modalImage.src}
+                imageAlt={modalImage.alt}
+                onClose={() => setModalOpen(false)}
+            />
         </div>
     );
 }
