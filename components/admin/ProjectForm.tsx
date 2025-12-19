@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { Project, INITIAL_PROJECT_STATE } from '@/types/project';
-import { collection, addDoc, updateDoc, doc, serverTimestamp } from 'firebase/firestore';
+import { collection, addDoc, updateDoc, doc, serverTimestamp, getDoc, setDoc } from 'firebase/firestore';
 import { db, auth } from '@/lib/firebase/config';
 import { useRouter } from 'next/navigation';
 import ImageUpload from './ImageUpload';
@@ -177,14 +177,35 @@ export default function ProjectForm({ initialData }: ProjectFormProps) {
                 return;
             }
 
+            // Firestore Save (Production Mode)
             if (initialData?.id) {
+                // Editing existing project
                 const docRef = doc(db, "projects", initialData.id);
-                await updateDoc(docRef, {
-                    ...project,
-                    updatedAt: serverTimestamp()
-                });
-                alert('Project updated!');
+                const docSnap = await getDoc(docRef);
+
+                if (docSnap.exists()) {
+                    // Document exists in Firestore - update it
+                    console.log("ProjectForm: Updating existing Firestore document");
+                    await updateDoc(docRef, {
+                        ...project,
+                        updatedAt: serverTimestamp()
+                    });
+                } else {
+                    // Document doesn't exist (MOCK_DATA project) - create it
+                    console.log("ProjectForm: Creating Firestore document for MOCK_DATA project");
+                    await setDoc(docRef, {
+                        ...project,
+                        id: initialData.id,
+                        createdBy: auth.currentUser?.uid || 'unknown',
+                        createdByEmail: auth.currentUser?.email || '',
+                        createdAt: serverTimestamp(),
+                        updatedAt: serverTimestamp()
+                    });
+                }
+                alert('Project updated successfully!');
             } else {
+                // Creating new project
+                console.log("ProjectForm: Creating new Firestore document");
                 await addDoc(collection(db, "projects"), {
                     ...project,
                     createdBy: auth.currentUser?.uid,
@@ -192,12 +213,12 @@ export default function ProjectForm({ initialData }: ProjectFormProps) {
                     createdAt: serverTimestamp(),
                     updatedAt: serverTimestamp()
                 });
-                alert('Project created!');
+                alert('Project created successfully!');
             }
 
             router.push('/admin');
         } catch (e: any) {
-            console.error(e);
+            console.error("Error saving project:", e);
             alert('Error saving project: ' + e.message);
         } finally {
             setLoading(false);

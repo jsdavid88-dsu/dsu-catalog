@@ -113,6 +113,7 @@ export default function AdminPage() {
                                 <tr className="border-b border-neutral-700">
                                     <th className="py-3 px-4">Title (KO)</th>
                                     <th className="py-3 px-4">Year</th>
+                                    <th className="py-3 px-4">YouTube ID</th>
                                     <th className="py-3 px-4">Created by</th>
                                     <th className="py-3 px-4">Status</th>
                                     <th className="py-3 px-4 text-right">Actions</th>
@@ -123,6 +124,9 @@ export default function AdminPage() {
                                     <tr key={proj.id} className="border-b border-neutral-700/50 hover:bg-neutral-700/30 transition-colors">
                                         <td className="py-3 px-4 font-medium">{proj.title.ko}</td>
                                         <td className="py-3 px-4 text-gray-400">{proj.year}</td>
+                                        <td className="py-3 px-4 text-gray-500 text-xs font-mono">
+                                            {proj.youtubeId || proj.fullYoutubeId || '-'}
+                                        </td>
                                         <td className="py-3 px-4 text-gray-500 text-sm">
                                             {proj.createdByEmail || 'Unknown'}
                                         </td>
