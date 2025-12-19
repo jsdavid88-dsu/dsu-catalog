@@ -5,6 +5,8 @@ import { Project } from '@/types/project';
 import FeedCard from './FeedCard';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MOCK_DATA } from '@/data/projects_v2';
+import { collection, getDocs, query, where } from 'firebase/firestore';
+import { db } from '@/lib/firebase/config';
 
 interface FeedBoardProps {
     locale: 'ko' | 'en' | 'ja' | 'zh';
@@ -20,7 +22,7 @@ export default function FeedBoard({ locale }: FeedBoardProps) {
 
     // 1. Initial Data Loading
     useEffect(() => {
-        const initData = () => {
+        const initData = async () => {
             try {
                 const isMock = localStorage.getItem('mockUser');
                 if (isMock) {
@@ -34,8 +36,24 @@ export default function FeedBoard({ locale }: FeedBoardProps) {
 
                     setProjects(Array.from(projectMap.values()));
                 } else {
-                    console.log("Loading MOCK_DATA into FeedBoard...");
-                    setProjects(MOCK_DATA as unknown as Project[]);
+                    console.log("Loading projects from Firestore + MOCK_DATA...");
+
+                    // Fetch only published projects from Firestore
+                    const q = query(collection(db, "projects"), where("status", "==", "published"));
+                    const snapshot = await getDocs(q);
+                    const firestoreProjects = snapshot.docs.map(doc => ({
+                        id: doc.id,
+                        ...doc.data()
+                    } as Project));
+
+                    console.log(`Loaded ${firestoreProjects.length} published projects from Firestore`);
+
+                    // Merge: Start with MOCK_DATA, then override with Firestore (Firestore takes priority)
+                    const projectMap = new Map<string, Project>();
+                    MOCK_DATA.forEach(p => projectMap.set(p.id!, p));
+                    firestoreProjects.forEach(p => projectMap.set(p.id!, p));
+
+                    setProjects(Array.from(projectMap.values()));
                 }
             } catch (err) {
                 console.error("Failed to initialize projects:", err);

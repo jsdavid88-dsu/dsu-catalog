@@ -27,7 +27,7 @@ export default function AdminPage() {
                 const localProjects = JSON.parse(localStorage.getItem('mockProjects') || '[]');
                 console.log("Admin Dashboard: localProjects count =", localProjects.length);
 
-                // Use a Map to deduplicate by ID, prioritizing local storage
+                // Use a Map to deduplicate by ID, prioritizing local storage over MOCK_DATA
                 const projectMap = new Map<string, Project>();
                 MOCK_DATA.forEach(p => projectMap.set(p.id!, p));
                 localProjects.forEach((p: Project) => projectMap.set(p.id!, p));
@@ -40,7 +40,13 @@ export default function AdminPage() {
                     const snap = await getDocs(collection(db, "projects"));
                     const firestoreProjects = snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Project));
                     console.log("Admin Dashboard: firestoreProjects count =", firestoreProjects.length);
-                    setProjects(firestoreProjects.length > 0 ? firestoreProjects : MOCK_DATA);
+
+                    // Merge MOCK_DATA with Firestore, Firestore takes priority
+                    const projectMap = new Map<string, Project>();
+                    MOCK_DATA.forEach(p => projectMap.set(p.id!, p));
+                    firestoreProjects.forEach(p => projectMap.set(p.id!, p));
+
+                    setProjects(Array.from(projectMap.values()));
                 } catch (e) {
                     console.error("Failed to fetch projects", e);
                     setProjects(MOCK_DATA);
