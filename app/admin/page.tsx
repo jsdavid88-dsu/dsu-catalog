@@ -102,126 +102,127 @@ export default function AdminPage() {
 
             {/* Projects Tab */}
             {activeTab === 'projects' && (
-                <div className="flex justify-between items-center mb-8">
-                <div>
-                    <h1 className="text-3xl font-bold">
-                        {isAdmin ? 'Admin Dashboard' : 'My Project'}
-                    </h1>
-                    <p className="text-gray-500 text-sm mt-1">
-                        {isAdmin
-                            ? `Managing ${displayedProjects.length} projects`
-                            : displayedProjects.length > 0
-                                ? 'Your graduation project'
-                                : 'No project yet - create one to get started'}
-                    </p>
-                </div>
-                {isAdmin && (
-                    <Link href="/admin/projects/new" className="px-4 py-2 bg-blue-600 rounded hover:bg-blue-500">
-                        + Add New Project
-                    </Link>
-                )}
-                {!isAdmin && displayedProjects.length === 0 && (<Link href="/admin/projects/new" className="px-4 py-2 bg-green-600 rounded hover:bg-green-500">
-                    + Create My Project
-                </Link>
-                )}
-            </div>
-
-            <div className="bg-neutral-800 p-6 rounded-lg mb-8">
-                <h2 className="text-xl font-semibold mb-4 text-gray-200">System Status</h2>
-                {mockMode && (
-                    <div className="mb-6 p-4 bg-blue-900/40 border border-blue-500/40 rounded text-blue-200">
-                        <span className="font-bold">TEST MODE ACTIVE</span>: Changes are saved to local storage.
-                    </div>
-                )}
-
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div className="p-6 bg-neutral-700 rounded border border-neutral-600 flex flex-col justify-between h-32">
-                        <h3 className="text-lg font-medium text-gray-300">Total Projects</h3>
-                        <p className="text-4xl font-bold text-white">{projects.length}</p>
-                    </div>
-                    {mockMode && (
-                        <div className="p-6 bg-neutral-700 rounded border border-neutral-600 flex flex-col justify-between h-32">
-                            <h3 className="text-lg font-medium text-gray-300">Storage</h3>
-                            <button
-                                onClick={handleClearStorage}
-                                className="text-sm bg-red-900/40 hover:bg-red-900/60 text-red-200 py-1 px-3 rounded border border-red-500/30 transition-colors"
-                            >
-                                Clear Local Data
-                            </button>
+                <>
+                    <div className="flex justify-between items-center mb-8">
+                        <div>
+                            <h1 className="text-3xl font-bold">
+                                {isAdmin ? 'Admin Dashboard' : 'My Project'}
+                            </h1>
+                            <p className="text-gray-500 text-sm mt-1">
+                                {isAdmin
+                                    ? `Managing ${displayedProjects.length} projects`
+                                    : displayedProjects.length > 0
+                                        ? 'Your graduation project'
+                                        : 'No project yet - create one to get started'}
+                            </p>
                         </div>
-                    )}
-                </div>
-            </div>
-
-            <div className="bg-neutral-800 p-6 rounded-lg">
-                <h2 className="text-xl font-semibold mb-4 text-gray-200">Manage Projects</h2>
-                {loading ? (
-                    <p>Loading projects...</p>
-                ) : (
-                    <div className="overflow-x-auto">
-                        <table className="w-full text-left">
-                            <thead>
-                                <tr className="border-b border-neutral-700">
-                                    <th className="py-3 px-4">Title (KO)</th>
-                                    <th className="py-3 px-4">Year</th>
-                                    <th className="py-3 px-4">YouTube ID</th>
-                                    <th className="py-3 px-4">Created by</th>
-                                    <th className="py-3 px-4">Status</th>
-                                    <th className="py-3 px-4 text-right">Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {displayedProjects.map((proj) => (
-                                    <tr key={proj.id} className="border-b border-neutral-700/50 hover:bg-neutral-700/30 transition-colors">
-                                        <td className="py-3 px-4 font-medium">{proj.title.ko}</td>
-                                        <td className="py-3 px-4 text-gray-400">{proj.year}</td>
-                                        <td className="py-3 px-4 text-gray-500 text-xs font-mono">
-                                            {proj.youtubeId || proj.fullYoutubeId || '-'}
-                                        </td>
-                                        <td className="py-3 px-4 text-gray-500 text-sm">
-                                            {proj.createdByEmail || 'Unknown'}
-                                        </td>
-                                        <td className="py-3 px-4">
-                                            <span className={`text-xs px-2 py-1 rounded uppercase font-bold ${proj.status === 'published' ? 'bg-green-900/50 text-green-400' : 'bg-yellow-900/50 text-yellow-400'
-                                                }`}>
-                                                {proj.status}
-                                            </span>
-                                        </td>
-                                        <td className="py-3 px-4 text-right">
-                                            {(userRole === 'admin' || proj.createdBy === user?.uid) && (
-                                                <>
-                                                    <Link
-                                                        href={`/admin/projects/${proj.id}`}
-                                                        className="text-blue-400 hover:text-blue-300 font-medium mr-4"
-                                                    >
-                                                        Edit
-                                                    </Link>
-                                                    <button className="text-red-400 hover:text-red-300 font-medium">
-                                                        Delete
-                                                    </button>
-                                                </>
-                                            )}
-                                            {userRole !== 'admin' && proj.createdBy !== user?.uid && (
-                                                <span className="text-gray-600 text-sm">No access</span>
-                                            )}
-                                        </td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
+                        {isAdmin && (
+                            <Link href="/admin/projects/new" className="px-4 py-2 bg-blue-600 rounded hover:bg-blue-500">
+                                + Add New Project
+                            </Link>
+                        )}
+                        {!isAdmin && displayedProjects.length === 0 && (<Link href="/admin/projects/new" className="px-4 py-2 bg-green-600 rounded hover:bg-green-500">
+                            + Create My Project
+                        </Link>
+                        )}
                     </div>
-                )}
-            </div>
-            </>
-    )
-}
 
-{/* Users Tab (Admin Only) */ }
-{
-    activeTab === 'users' && isAdmin && (
-        <UserManagement />
-    )
-}
+                    <div className="bg-neutral-800 p-6 rounded-lg mb-8">
+                        <h2 className="text-xl font-semibold mb-4 text-gray-200">System Status</h2>
+                        {mockMode && (
+                            <div className="mb-6 p-4 bg-blue-900/40 border border-blue-500/40 rounded text-blue-200">
+                                <span className="font-bold">TEST MODE ACTIVE</span>: Changes are saved to local storage.
+                            </div>
+                        )}
+
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div className="p-6 bg-neutral-700 rounded border border-neutral-600 flex flex-col justify-between h-32">
+                                <h3 className="text-lg font-medium text-gray-300">Total Projects</h3>
+                                <p className="text-4xl font-bold text-white">{projects.length}</p>
+                            </div>
+                            {mockMode && (
+                                <div className="p-6 bg-neutral-700 rounded border border-neutral-600 flex flex-col justify-between h-32">
+                                    <h3 className="text-lg font-medium text-gray-300">Storage</h3>
+                                    <button
+                                        onClick={handleClearStorage}
+                                        className="text-sm bg-red-900/40 hover:bg-red-900/60 text-red-200 py-1 px-3 rounded border border-red-500/30 transition-colors"
+                                    >
+                                        Clear Local Data
+                                    </button>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+
+                    <div className="bg-neutral-800 p-6 rounded-lg">
+                        <h2 className="text-xl font-semibold mb-4 text-gray-200">Manage Projects</h2>
+                        {loading ? (
+                            <p>Loading projects...</p>
+                        ) : (
+                            <div className="overflow-x-auto">
+                                <table className="w-full text-left">
+                                    <thead>
+                                        <tr className="border-b border-neutral-700">
+                                            <th className="py-3 px-4">Title (KO)</th>
+                                            <th className="py-3 px-4">Year</th>
+                                            <th className="py-3 px-4">YouTube ID</th>
+                                            <th className="py-3 px-4">Created by</th>
+                                            <th className="py-3 px-4">Status</th>
+                                            <th className="py-3 px-4 text-right">Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {displayedProjects.map((proj) => (
+                                            <tr key={proj.id} className="border-b border-neutral-700/50 hover:bg-neutral-700/30 transition-colors">
+                                                <td className="py-3 px-4 font-medium">{proj.title.ko}</td>
+                                                <td className="py-3 px-4 text-gray-400">{proj.year}</td>
+                                                <td className="py-3 px-4 text-gray-500 text-xs font-mono">
+                                                    {proj.youtubeId || proj.fullYoutubeId || '-'}
+                                                </td>
+                                                <td className="py-3 px-4 text-gray-500 text-sm">
+                                                    {proj.createdByEmail || 'Unknown'}
+                                                </td>
+                                                <td className="py-3 px-4">
+                                                    <span className={`text-xs px-2 py-1 rounded uppercase font-bold ${proj.status === 'published' ? 'bg-green-900/50 text-green-400' : 'bg-yellow-900/50 text-yellow-400'
+                                                        }`}>
+                                                        {proj.status}
+                                                    </span>
+                                                </td>
+                                                <td className="py-3 px-4 text-right">
+                                                    {(userRole === 'admin' || proj.createdBy === user?.uid) && (
+                                                        <>
+                                                            <Link
+                                                                href={`/admin/projects/${proj.id}`}
+                                                                className="text-blue-400 hover:text-blue-300 font-medium mr-4"
+                                                            >
+                                                                Edit
+                                                            </Link>
+                                                            <button className="text-red-400 hover:text-red-300 font-medium">
+                                                                Delete
+                                                            </button>
+                                                        </>
+                                                    )}
+                                                    {userRole !== 'admin' && proj.createdBy !== user?.uid && (
+                                                        <span className="text-gray-600 text-sm">No access</span>
+                                                    )}
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        )}
+                    </div>
+                </>
+            )
+            }
+
+            {/* Users Tab (Admin Only) */}
+            {
+                activeTab === 'users' && isAdmin && (
+                    <UserManagement />
+                )
+            }
         </AdminLayout >
     );
 }
