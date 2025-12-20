@@ -8,7 +8,7 @@ import { doc, getDoc } from 'firebase/firestore';
 interface AuthContextType {
     user: User | null;
     loading: boolean;
-    userRole: 'admin' | 'student' | null;
+    userRole: 'admin' | 'student' | 'pending' | null;
     loginAsMock?: () => void;
 }
 
@@ -16,7 +16,7 @@ const AuthContext = createContext<AuthContextType>({ user: null, loading: true, 
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     const [user, setUser] = useState<User | null>(null);
-    const [userRole, setUserRole] = useState<'admin' | 'student' | null>(null);
+    const [userRole, setUserRole] = useState<'admin' | 'student' | 'pending' | null>(null);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
@@ -37,14 +37,14 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
                 try {
                     const userDoc = await getDoc(doc(db, 'users', firebaseUser.uid));
                     if (userDoc.exists()) {
-                        setUserRole(userDoc.data()?.role || 'student');
+                        setUserRole(userDoc.data()?.role || 'pending');
                     } else {
-                        // Default to student if no role document exists
-                        setUserRole('student');
+                        // Default to pending if no role document exists
+                        setUserRole('pending');
                     }
                 } catch (error) {
                     console.error('Error fetching user role:', error);
-                    setUserRole('student');
+                    setUserRole('pending');
                 }
             } else {
                 setUserRole(null);
