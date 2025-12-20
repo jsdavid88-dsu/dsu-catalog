@@ -26,7 +26,7 @@ export async function POST(request: Request) {
             return NextResponse.json({ translations });
         }
 
-        const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash-latest' });
+        const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
         const translations: Record<string, string> = {};
 
         // Translate to each target language
