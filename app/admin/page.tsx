@@ -66,13 +66,36 @@ export default function AdminPage() {
 
     if (!mounted) return null;
 
+    // Filter projects based on role
+    const isAdmin = userRole === 'admin';
+    const displayedProjects = isAdmin
+        ? projects
+        : projects.filter(p => p.createdBy === user?.uid);
+
     return (
         <AdminLayout>
             <div className="flex justify-between items-center mb-8">
-                <h1 className="text-3xl font-bold">Admin Dashboard</h1>
-                <Link href="/admin/projects/new" className="px-4 py-2 bg-blue-600 rounded hover:bg-blue-500">
-                    + Add New Project
+                <div>
+                    <h1 className="text-3xl font-bold">
+                        {isAdmin ? 'Admin Dashboard' : 'My Project'}
+                    </h1>
+                    <p className="text-gray-500 text-sm mt-1">
+                        {isAdmin
+                            ? `Managing ${displayedProjects.length} projects`
+                            : displayedProjects.length > 0
+                                ? 'Your graduation project'
+                                : 'No project yet - create one to get started'}
+                    </p>
+                </div>
+                {isAdmin && (
+                    <Link href="/admin/projects/new" className="px-4 py-2 bg-blue-600 rounded hover:bg-blue-500">
+                        + Add New Project
+                    </Link>
+                )}
+                {!isAdmin && displayedProjects.length === 0 && (<Link href="/admin/projects/new" className="px-4 py-2 bg-green-600 rounded hover:bg-green-500">
+                    + Create My Project
                 </Link>
+                )}
             </div>
 
             <div className="bg-neutral-800 p-6 rounded-lg mb-8">
@@ -120,7 +143,7 @@ export default function AdminPage() {
                                 </tr>
                             </thead>
                             <tbody>
-                                {projects.map((proj) => (
+                                {displayedProjects.map((proj) => (
                                     <tr key={proj.id} className="border-b border-neutral-700/50 hover:bg-neutral-700/30 transition-colors">
                                         <td className="py-3 px-4 font-medium">{proj.title.ko}</td>
                                         <td className="py-3 px-4 text-gray-400">{proj.year}</td>
