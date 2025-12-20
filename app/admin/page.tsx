@@ -1,6 +1,7 @@
 'use client';
 
 import AdminLayout from '@/components/admin/AdminLayout';
+import UserManagement from '@/components/admin/UserManagement';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { collection, getDocs } from 'firebase/firestore';
@@ -10,6 +11,7 @@ import { Project } from '@/types/project';
 import { useAuth } from '@/context/AuthContext';
 
 export default function AdminPage() {
+    const [activeTab, setActiveTab] = useState<'projects' | 'users'>('projects');
     const [projects, setProjects] = useState<Project[]>([]);
     const [mockMode, setMockMode] = useState(false);
     const [loading, setLoading] = useState(true);
@@ -74,7 +76,33 @@ export default function AdminPage() {
 
     return (
         <AdminLayout>
-            <div className="flex justify-between items-center mb-8">
+            {/* Tab Navigation */}
+            <div className="flex gap-2 mb-8 border-b border-neutral-700">
+                <button
+                    onClick={() => setActiveTab('projects')}
+                    className={`px-6 py-3 font-bold transition-colors ${activeTab === 'projects'
+                        ? 'border-b-2 border-blue-500 text-white'
+                        : 'text-gray-500 hover:text-gray-300'
+                        }`}
+                >
+                    Projects
+                </button>
+                {isAdmin && (
+                    <button
+                        onClick={() => setActiveTab('users')}
+                        className={`px-6 py-3 font-bold transition-colors ${activeTab === 'users'
+                            ? 'border-b-2 border-purple-500 text-white'
+                            : 'text-gray-500 hover:text-gray-300'
+                            }`}
+                    >
+                        User Management
+                    </button>
+                )}
+            </div>
+
+            {/* Projects Tab */}
+            {activeTab === 'projects' && (
+                <div className="flex justify-between items-center mb-8">
                 <div>
                     <h1 className="text-3xl font-bold">
                         {isAdmin ? 'Admin Dashboard' : 'My Project'}
@@ -183,7 +211,18 @@ export default function AdminPage() {
                         </table>
                     </div>
                 )}
-            </div>
-        </AdminLayout>
+                    </div>
+            )}
+        </div>
+    )
+}
+
+{/* Users Tab (Admin Only) */ }
+{
+    activeTab === 'users' && isAdmin && (
+        <UserManagement />
+    )
+}
+        </AdminLayout >
     );
 }
