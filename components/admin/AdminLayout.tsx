@@ -4,6 +4,8 @@ import { useAuth } from '@/context/AuthContext';
 import { useEffect } from 'react';
 import PendingApprovalPage from './PendingApprovalPage';
 import AccessDeniedPage from './AccessDeniedPage';
+import { signOut } from 'firebase/auth';
+import { auth } from '@/lib/firebase/config';
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
     const { user, loading, userRole } = useAuth();
@@ -13,6 +15,17 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             window.location.href = '/admin/login';
         }
     }, [user, loading]);
+
+    const handleLogout = async () => {
+        try {
+            localStorage.removeItem('mockUser');
+            localStorage.removeItem('mockProjects');
+            await signOut(auth);
+            window.location.href = '/admin/login';
+        } catch (error) {
+            console.error('Logout error:', error);
+        }
+    };
 
     if (loading) {
         return <div className="min-h-screen flex items-center justify-center text-white">Loading Admin...</div>;
@@ -44,16 +57,25 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                         </span>
                     )}
                 </div>
-                <a
-                    href="/ko"
-                    className="text-sm text-blue-400 hover:text-blue-300 transition-colors flex items-center gap-2"
-                >
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="m12 19-7-7 7-7" />
-                        <path d="M19 12H5" />
-                    </svg>
-                    Back to Home
-                </a>
+                <div className="flex items-center gap-4">
+                    <span className="text-sm text-gray-400">{user.email}</span>
+                    <button
+                        onClick={handleLogout}
+                        className="px-4 py-2 bg-red-600 hover:bg-red-500 text-white text-sm rounded transition-colors font-bold"
+                    >
+                        Logout
+                    </button>
+                    <a
+                        href="/ko"
+                        className="text-sm text-blue-400 hover:text-blue-300 transition-colors flex items-center gap-2"
+                    >
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="m12 19-7-7 7-7" />
+                            <path d="M19 12H5" />
+                        </svg>
+                        Back to Home
+                    </a>
+                </div>
             </div>
 
             {/* Main Content */}
