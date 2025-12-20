@@ -219,7 +219,11 @@ export default function ProjectForm({ initialData }: ProjectFormProps) {
             router.push('/admin');
         } catch (e: any) {
             console.error("Error saving project:", e);
-            alert('Error saving project: ' + e.message);
+            console.error("Error details:", e.code, e.message);
+            const errorMsg = e.code === 'permission-denied'
+                ? 'Permission denied. Check Firestore security rules.'
+                : e.message || 'Unknown error';
+            alert(`Error saving project: ${errorMsg}\n\nCheck browser console for details.`);
         } finally {
             setLoading(false);
         }
@@ -320,6 +324,10 @@ export default function ProjectForm({ initialData }: ProjectFormProps) {
 
                 <div className="p-4 bg-neutral-800 rounded border border-neutral-700 space-y-4">
                     <h3 className="text-sm font-bold text-gray-400 uppercase tracking-wider">Video Content</h3>
+                    <p className="text-xs text-gray-500">
+                        ⚠️ **YouTube ID만** 입력하세요, 전체 URL 아님!<br />
+                        예: <code className="bg-black px-1">aKj-YTvd9MY</code> (URL: https://www.youtube.com/watch?v=<b>aKj-YTvd9MY</b>)
+                    </p>
                     <div>
                         <label className="block text-xs font-medium text-blue-400 mb-1">Trailer YouTube ID</label>
                         <input
