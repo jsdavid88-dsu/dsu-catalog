@@ -75,13 +75,18 @@ export default function FeedBoard({ locale }: FeedBoardProps) {
             if (activeFilter !== "All") {
                 result = result.filter(p => {
                     const tags = [...(p.genres || []), ...(p.technique || [])];
-                    const isExactlyMatch = tags.some(t => t.toLowerCase() === activeFilter.toLowerCase());
 
-                    // Fuzzy match for common categories
+                    // 3D Filter: match "3D", "3D Animation", or common 3D tools
                     if (activeFilter === "3D") {
-                        return isExactlyMatch || tags.some(t => ["Maya", "Blender", "Unreal"].some(k => t.includes(k)));
+                        return tags.some(t =>
+                            t.toLowerCase() === "3d" ||
+                            t.toLowerCase().includes("3d animation") ||
+                            ["Maya", "Blender", "Unreal"].some(k => t.includes(k))
+                        );
                     }
-                    return isExactlyMatch;
+
+                    // For other filters, exact match
+                    return tags.some(t => t.toLowerCase() === activeFilter.toLowerCase());
                 });
             }
 
