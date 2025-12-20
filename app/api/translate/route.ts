@@ -1,35 +1,82 @@
 import { NextResponse } from 'next/server';
+import { GoogleGenerativeAI } from '@google/generative-ai';
+
+// Initialize Gemini API
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
 
 export async function POST(request: Request) {
     try {
         const { text, targetLocales } = await request.json();
 
-        // Check for API Key (Simulation)
-        const apiKey = process.env.GEMINI_API_KEY; // or OPENAI_API_KEY
+        if (!text || !targetLocales) {
+            return NextResponse.json(
+                { error: 'Missing text or targetLocales' },
+                { status: 400 }
+            );
+        }
 
-        // Mock Response for Demo (User did not provide key yet)
-        // In production, you would call fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=' + apiKey)
+        // Check if API key is configured
+        if (!process.env.GEMINI_API_KEY) {
+            console.warn('GEMINI_API_KEY not configured, using mock translation');
+            // Fallback to mock
+            const translations: Record<string, string> = {};
+            (targetLocales as string[]).forEach(lang => {
+                translations[lang] = lang === 'ko' ? text : `[Auto-translated] ${text}`;
+            });
+            return NextResponse.json({ translations });
+        }
 
-        // Simulating delay
-        await new Promise(resolve => setTimeout(resolve, 800));
-
+        const model = genAI.getGenerativeModel({ model: 'gemini-pro' });
         const translations: Record<string, string> = {};
 
-        // Simple Mock Translation Logic
-        // "안녕하세요" -> [EN] 안녕하세요, [JA] 안녕하세요
-        (targetLocales as string[]).forEach(lang => {
-            if (lang === 'en') translations[lang] = `[Translated to EN] ${text}`;
-            if (lang === 'ja') translations[lang] = `[Translated to JA] ${text}`;
-            if (lang === 'zh') translations[lang] = `[Translated to ZH] ${text}`;
-            if (lang === 'ko') translations[lang] = text;
-        });
+        // Translate to each target language
+        for (const locale of targetLocales as string[]) {
+            if (locale === 'ko') {
+                // Source is Korean, no translation needed
+                translations[locale] = text;
+                continue;
+            }
 
-        // NOTE: To make this real, the user needs to provide a GEMINI_API_KEY in .env.local
-        // and we would add the actual fetch call here.
+            const languageNames: Record<string, string> = {
+                'en': 'English',
+                'ja': 'Japanese',
+                'zh': 'Chinese (Simplified)'
+            };
+
+            const targetLanguage = languageNames[locale] || locale;
+
+            try {
+                const prompt = `Translate the following Korean text to ${targetLanguage}. 
+Provide ONLY the translation, no explanations or additional text.
+This is for an animation project catalog, so maintain a professional and creative tone.
+
+Korean text:
+${text}
+
+${targetLanguage} translation:`;
+
+                const result = await model.generateContent(prompt);
+                const response = await result.response;
+                const translation = response.text().trim();
+
+                translations[locale] = translation;
+
+                // Small delay to avoid rate limiting
+                await new Promise(resolve => setTimeout(resolve, 500));
+
+            } catch (error) {
+                console.error(`Gemini translation error for ${locale}:`, error);
+                translations[locale] = `[Translation failed] ${text}`;
+            }
+        }
 
         return NextResponse.json({ translations });
 
     } catch (error) {
-        return NextResponse.json({ error: 'Translation failed' }, { status: 500 });
+        console.error('Translation API error:', error);
+        return NextResponse.json(
+            { error: 'Translation failed' },
+            { status: 500 }
+        );
     }
 }
