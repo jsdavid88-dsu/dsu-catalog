@@ -1,8 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
-import { storage } from '@/lib/firebase/config';
 
 interface ImageUploadProps {
     label: string;
@@ -20,26 +18,46 @@ export default function ImageUpload({ label, value, onChange, folder = 'uploads'
         if (!file) return;
 
         setUploading(true);
-        const storageRef = ref(storage, `${folder}/${Date.now()}_${file.name}`);
-        const uploadTask = uploadBytesResumable(storageRef, file);
+        setProgress(0);
 
-        uploadTask.on(
-            'state_changed',
-            (snapshot) => {
-                const p = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-                setProgress(p);
-            },
-            (error) => {
-                console.error("Upload error:", error);
-                setUploading(false);
-                alert('Upload failed');
-            },
-            async () => {
-                const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
-                onChange(downloadURL);
-                setUploading(false);
+        try {
+            const cloudName = 'duqc759dj';
+            const uploadPreset = 'ml_default'; // Cloudinary default unsigned preset
+
+            const formData = new FormData();
+            formData.append('file', file);
+            formData.append('upload_preset', uploadPreset);
+            formData.append('folder', folder);
+
+            console.log('Uploading to Cloudinary...');
+
+            // Upload to Cloudinary
+            const response = await fetch(
+                `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`,
+                {
+                    method: 'POST',
+                    body: formData,
+                }
+            );
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                console.error('Cloudinary error:', errorData);
+                throw new Error(errorData.error?.message || 'Upload failed');
             }
-        );
+
+            const data = await response.json();
+
+            // Get the secure URL
+            const downloadURL = data.secure_url;
+            onChange(downloadURL);
+            setProgress(100);
+        } catch (error) {
+            console.error("Upload error:", error);
+            alert('Upload failed: ' + (error instanceof Error ? error.message : 'Unknown error'));
+        } finally {
+            setUploading(false);
+        }
     };
 
     return (
@@ -59,9 +77,10 @@ export default function ImageUpload({ label, value, onChange, folder = 'uploads'
                     />
                     {uploading && (
                         <div className="w-full bg-gray-700 rounded-full h-2.5 mt-2">
-                            <div className="bg-blue-600 h-2.5 rounded-full" style={{ width: `${progress}%` }}></div>
+                            <div className="bg-blue-600 h-2.5 rounded-full transition-all" style={{ width: `${progress}%` }}></div>
                         </div>
                     )}
+                    {uploading && <p className="text-xs text-gray-500 mt-1">Uploading to Cloudinary...</p>}
                 </div>
             </div>
         </div>
