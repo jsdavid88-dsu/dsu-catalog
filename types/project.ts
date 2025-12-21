@@ -41,6 +41,9 @@ export interface Project {
     fullYoutubeId: string;
     artworkUrls: string[];
 
+    // Engagement
+    views?: number;
+
     // Ownership & Permissions
     createdBy?: string;  // User UID who created this project
     createdByEmail?: string;  // Email for display purposes
@@ -67,6 +70,7 @@ export const INITIAL_PROJECT_STATE: Omit<Project, 'id' | 'createdAt' | 'updatedA
     trailerYoutubeId: '',
     fullYoutubeId: '',
     artworkUrls: [],
+    views: 0,
     createdBy: undefined,
     createdByEmail: undefined
 };
