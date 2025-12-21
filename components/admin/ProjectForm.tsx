@@ -1,16 +1,18 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Project, INITIAL_PROJECT_STATE } from '@/types/project';
+import { Project, INITIAL_PROJECT_STATE, Member } from '@/types/project';
 import { collection, addDoc, updateDoc, doc, serverTimestamp, getDoc, setDoc } from 'firebase/firestore';
 import { db, auth } from '@/lib/firebase/config';
 import { useRouter } from 'next/navigation';
 import ImageUpload from './ImageUpload';
 import TagSelector from './TagSelector';
 import { useAuth } from '@/context/AuthContext';
+import { optimizeCloudinary } from '@/lib/cloudinary';
+import { User, Link as LinkIcon, Trash2, Plus } from 'lucide-react';
 
 type CheckKeys<T, K extends keyof T> = K;
-type LocalizedField = CheckKeys<Project, 'title' | 'studentName' | 'description'>;
+type LocalizedField = CheckKeys<Project, 'title' | 'description'>;
 
 const GENRE_OPTIONS = [
     'Action', 'Sci-Fi', 'Drama', 'Comedy', 'Thriller', 'Romance',
@@ -35,7 +37,21 @@ export default function ProjectForm({ initialData }: ProjectFormProps) {
     useEffect(() => {
         if (initialData) {
             const { id, createdAt, updatedAt, ...rest } = initialData;
-            setProject(rest);
+
+            // Migration: If loading old data that had studentName but no members
+            const migratedProject = { ...rest };
+            if (migratedProject.studentName && (!migratedProject.members || migratedProject.members.length === 0)) {
+                migratedProject.members = [{
+                    name: migratedProject.studentName,
+                    links: {}
+                }];
+            }
+            // Ensure members array is not empty
+            if (!migratedProject.members || migratedProject.members.length === 0) {
+                migratedProject.members = INITIAL_PROJECT_STATE.members;
+            }
+
+            setProject(migratedProject as any);
         }
     }, [initialData]);
 
@@ -55,7 +71,7 @@ export default function ProjectForm({ initialData }: ProjectFormProps) {
     };
 
     const handleAutoTranslate = async () => {
-        if (!project.title.ko && !project.description.ko && !project.studentName.ko) {
+        if (!project.title.ko && !project.description.ko && project.members.every(m => !m.name.ko)) {
             alert("Please enter Korean text first.");
             return;
         }
@@ -94,21 +110,22 @@ export default function ProjectForm({ initialData }: ProjectFormProps) {
                 }
             }
 
-            // Translate Name
-            if (project.studentName.ko) {
-                const res = await fetch('/api/translate', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ text: project.studentName.ko, targetLocales: ['en', 'ja', 'zh'] })
-                });
-                const data = await res.json();
-                if (data.translations) {
-                    setProject(prev => ({
-                        ...prev,
-                        studentName: { ...prev.studentName, ...data.translations }
-                    }));
+            // Translate Member Names
+            const updatedMembers = [...project.members];
+            for (let i = 0; i < updatedMembers.length; i++) {
+                if (updatedMembers[i].name.ko) {
+                    const res = await fetch('/api/translate', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ text: updatedMembers[i].name.ko, targetLocales: ['en', 'ja', 'zh'] })
+                    });
+                    const data = await res.json();
+                    if (data.translations) {
+                        updatedMembers[i].name = { ...updatedMembers[i].name, ...data.translations };
+                    }
                 }
             }
+            setProject(prev => ({ ...prev, members: updatedMembers }));
 
             alert("Auto-translation complete! Check other tabs.");
 
@@ -127,6 +144,7 @@ export default function ProjectForm({ initialData }: ProjectFormProps) {
         try {
             // Basic validation
             if (!project.title.ko) throw new Error("Korean title is required");
+            if (project.members.some(m => !m.name.ko)) throw new Error("All members must have names (Korean)");
 
             // Mock Data Save for Test Account
             const isMock = localStorage.getItem('mockUser');
@@ -265,30 +283,129 @@ export default function ProjectForm({ initialData }: ProjectFormProps) {
                     <label className="block text-sm font-medium mb-1">Title ({activeTab.toUpperCase()})</label>
                     <input
                         type="text"
-                        className="w-full bg-neutral-700 border border-neutral-600 rounded p-2 focus:ring-2 focus:ring-blue-500 outline-none"
+                        className="w-full bg-neutral-700 border border-neutral-600 rounded p-3 focus:ring-2 focus:ring-blue-500 outline-none transition-all"
                         value={project.title[activeTab]}
                         onChange={(e) => handleTextChange('title', e.target.value)}
-                    />
-                </div>
-
-                <div>
-                    <label className="block text-sm font-medium mb-1">Student Name ({activeTab.toUpperCase()})</label>
-                    <input
-                        type="text"
-                        className="w-full bg-neutral-700 border border-neutral-600 rounded p-2 focus:ring-2 focus:ring-blue-500 outline-none"
-                        value={project.studentName[activeTab]}
-                        onChange={(e) => handleTextChange('studentName', e.target.value)}
+                        placeholder="Project Title"
                     />
                 </div>
 
                 <div>
                     <label className="block text-sm font-medium mb-1">Description ({activeTab.toUpperCase()})</label>
                     <textarea
-                        rows={4}
-                        className="w-full bg-neutral-700 border border-neutral-600 rounded p-2 focus:ring-2 focus:ring-blue-500 outline-none"
+                        rows={6}
+                        className="w-full bg-neutral-700 border border-neutral-600 rounded p-3 focus:ring-2 focus:ring-blue-500 outline-none transition-all"
                         value={project.description[activeTab]}
                         onChange={(e) => handleTextChange('description', e.target.value)}
+                        placeholder="Describe the project..."
                     />
+                </div>
+
+                {/* Member Section */}
+                <div className="space-y-4 pt-4">
+                    <div className="flex justify-between items-center">
+                        <label className="text-sm font-bold text-blue-400 uppercase tracking-widest flex items-center gap-2">
+                            <User size={16} /> Team Members & Portfolios
+                        </label>
+                        <button
+                            type="button"
+                            onClick={() => setProject(p => ({
+                                ...p,
+                                members: [...p.members, { name: { en: '', ja: '', zh: '', ko: '' }, links: {} }]
+                            }))}
+                            className="text-xs bg-blue-600 hover:bg-blue-500 text-white px-3 py-1 rounded flex items-center gap-1 transition-colors"
+                        >
+                            <Plus size={14} /> Add Member
+                        </button>
+                    </div>
+
+                    <div className="space-y-6">
+                        {project.members.map((member, idx) => (
+                            <div key={idx} className="bg-neutral-800/50 p-4 rounded-lg border border-neutral-700 space-y-4 relative group">
+                                {project.members.length > 1 && (
+                                    <button
+                                        type="button"
+                                        onClick={() => setProject(p => ({
+                                            ...p,
+                                            members: p.members.filter((_, i) => i !== idx)
+                                        }))}
+                                        className="absolute top-4 right-4 text-red-500 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity"
+                                    >
+                                        <Trash2 size={18} />
+                                    </button>
+                                )}
+
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                        <label className="block text-xs text-gray-400 mb-1">Name ({activeTab.toUpperCase()})</label>
+                                        <input
+                                            type="text"
+                                            className="w-full bg-neutral-700 border border-neutral-600 rounded p-2 text-sm outline-none focus:border-blue-500"
+                                            value={member.name[activeTab]}
+                                            onChange={(e) => {
+                                                const newMembers = [...project.members];
+                                                newMembers[idx].name[activeTab] = e.target.value;
+                                                setProject(prev => ({ ...prev, members: newMembers }));
+                                            }}
+                                            placeholder="Student Name"
+                                        />
+                                    </div>
+
+                                    <div className="space-y-2">
+                                        <label className="block text-xs text-gray-400 mb-1 flex items-center gap-1">
+                                            <LinkIcon size={12} /> Social / Portfolio Links
+                                        </label>
+                                        <div className="grid grid-cols-2 gap-2">
+                                            <input
+                                                type="text"
+                                                className="bg-neutral-700 border border-neutral-600 rounded p-1.5 text-xs outline-none focus:border-purple-500"
+                                                placeholder="Behance URL"
+                                                value={member.links.behance || ''}
+                                                onChange={(e) => {
+                                                    const newMembers = [...project.members];
+                                                    newMembers[idx].links.behance = e.target.value;
+                                                    setProject(prev => ({ ...prev, members: newMembers }));
+                                                }}
+                                            />
+                                            <input
+                                                type="text"
+                                                className="bg-neutral-700 border border-neutral-600 rounded p-1.5 text-xs outline-none focus:border-pink-500"
+                                                placeholder="Instagram URL"
+                                                value={member.links.instagram || ''}
+                                                onChange={(e) => {
+                                                    const newMembers = [...project.members];
+                                                    newMembers[idx].links.instagram = e.target.value;
+                                                    setProject(prev => ({ ...prev, members: newMembers }));
+                                                }}
+                                            />
+                                            <input
+                                                type="text"
+                                                className="bg-neutral-700 border border-neutral-600 rounded p-1.5 text-xs outline-none focus:border-blue-400"
+                                                placeholder="ArtStation URL"
+                                                value={member.links.artstation || ''}
+                                                onChange={(e) => {
+                                                    const newMembers = [...project.members];
+                                                    newMembers[idx].links.artstation = e.target.value;
+                                                    setProject(prev => ({ ...prev, members: newMembers }));
+                                                }}
+                                            />
+                                            <input
+                                                type="text"
+                                                className="bg-neutral-700 border border-neutral-600 rounded p-1.5 text-xs outline-none focus:border-gray-500"
+                                                placeholder="Personal Website / Other"
+                                                value={member.links.website || ''}
+                                                onChange={(e) => {
+                                                    const newMembers = [...project.members];
+                                                    newMembers[idx].links.website = e.target.value;
+                                                    setProject(prev => ({ ...prev, members: newMembers }));
+                                                }}
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
                 </div>
             </div>
 

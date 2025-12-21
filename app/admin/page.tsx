@@ -135,22 +135,33 @@ export default function AdminPage() {
                             </div>
                         )}
 
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                            <div className="p-6 bg-neutral-700 rounded border border-neutral-600 flex flex-col justify-between h-32">
-                                <h3 className="text-lg font-medium text-gray-300">Total Projects</h3>
+                        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                            <div className="p-6 bg-neutral-700/50 rounded border border-neutral-600 flex flex-col justify-between h-32">
+                                <h3 className="text-sm font-bold text-gray-400 uppercase tracking-widest">Total Projects</h3>
                                 <p className="text-4xl font-bold text-white">{projects.length}</p>
                             </div>
-                            {mockMode && (
-                                <div className="p-6 bg-neutral-700 rounded border border-neutral-600 flex flex-col justify-between h-32">
-                                    <h3 className="text-lg font-medium text-gray-300">Storage</h3>
-                                    <button
-                                        onClick={handleClearStorage}
-                                        className="text-sm bg-red-900/40 hover:bg-red-900/60 text-red-200 py-1 px-3 rounded border border-red-500/30 transition-colors"
-                                    >
-                                        Clear Local Data
-                                    </button>
-                                </div>
-                            )}
+                            <div className="p-6 bg-neutral-700/50 rounded border border-neutral-600 flex flex-col justify-between h-32">
+                                <h3 className="text-sm font-bold text-gray-400 uppercase tracking-widest">Total Views</h3>
+                                <p className="text-4xl font-bold text-blue-400">
+                                    {projects.reduce((acc, p) => acc + (p.views || 0), 0).toLocaleString()}
+                                </p>
+                            </div>
+                            <div className="p-6 bg-neutral-700/50 rounded border border-neutral-600 flex flex-col justify-between h-32 md:col-span-2">
+                                <h3 className="text-sm font-bold text-gray-400 uppercase tracking-widest">Top Project</h3>
+                                {projects.length > 0 ? (
+                                    <div className="flex justify-between items-end">
+                                        <div className="truncate pr-4">
+                                            <p className="text-lg font-bold text-white truncate max-w-[200px]">
+                                                {[...projects].sort((a, b) => (b.views || 0) - (a.views || 0))[0]?.title.ko}
+                                            </p>
+                                            <p className="text-xs text-gray-500">Highest engagement</p>
+                                        </div>
+                                        <p className="text-2xl font-black text-purple-400">
+                                            {[...projects].sort((a, b) => (b.views || 0) - (a.views || 0))[0]?.views || 0}
+                                        </p>
+                                    </div>
+                                ) : <p className="text-gray-500">N/A</p>}
+                            </div>
                         </div>
                     </div>
 
@@ -162,9 +173,10 @@ export default function AdminPage() {
                             <div className="overflow-x-auto">
                                 <table className="w-full text-left">
                                     <thead>
-                                        <tr className="border-b border-neutral-700">
+                                        <tr className="border-b border-neutral-700 text-xs font-bold text-gray-500 uppercase tracking-tighter">
                                             <th className="py-3 px-4">Title (KO)</th>
                                             <th className="py-3 px-4">Year</th>
+                                            <th className="py-3 px-4">Views</th>
                                             <th className="py-3 px-4">YouTube ID</th>
                                             <th className="py-3 px-4">Created by</th>
                                             <th className="py-3 px-4">Status</th>
@@ -176,6 +188,11 @@ export default function AdminPage() {
                                             <tr key={proj.id} className="border-b border-neutral-700/50 hover:bg-neutral-700/30 transition-colors">
                                                 <td className="py-3 px-4 font-medium">{proj.title.ko}</td>
                                                 <td className="py-3 px-4 text-gray-400">{proj.year}</td>
+                                                <td className="py-3 px-4">
+                                                    <span className="font-mono text-sm text-blue-400 bg-blue-400/10 px-2 py-0.5 rounded">
+                                                        {proj.views || 0}
+                                                    </span>
+                                                </td>
                                                 <td className="py-3 px-4 text-gray-500 text-xs font-mono">
                                                     {proj.youtubeId || proj.fullYoutubeId || '-'}
                                                 </td>

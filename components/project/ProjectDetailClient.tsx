@@ -1,12 +1,14 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Project } from '@/types/project';
+import { Project, Member } from '@/types/project';
 import { Link } from '@/i18n/navigation';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, ExternalLink, Instagram, Globe, Mail, Eye } from 'lucide-react';
 import { MOCK_DATA } from '@/data/projects_v2';
 import ImageModal from '@/components/common/ImageModal';
 import { optimizeCloudinary } from '@/lib/cloudinary';
+import { doc, updateDoc, increment } from 'firebase/firestore';
+import { db } from '@/lib/firebase/config';
 
 
 interface ProjectDetailProps {
@@ -35,6 +37,29 @@ export default function ProjectDetailClient({ projectId, initialProject, locale 
                 const mockMatch = MOCK_DATA.find(p => p.id === projectId);
                 if (mockMatch) setProject(mockMatch as Project);
             }
+            return; // Don't track views for mock mode
+        }
+
+        // View Tracking (Firestore only)
+        const trackView = async () => {
+            try {
+                // simple session check to avoid double counting
+                const sessionKey = `viewed_${projectId}`;
+                if (!sessionStorage.getItem(sessionKey)) {
+                    const docRef = doc(db, "projects", projectId);
+                    await updateDoc(docRef, {
+                        views: increment(1)
+                    });
+                    sessionStorage.setItem(sessionKey, 'true');
+                    console.log("ProjectDetailClient: View recorded for", projectId);
+                }
+            } catch (e) {
+                console.error("Failed to track view", e);
+            }
+        };
+
+        if (projectId && !projectId.startsWith('mock-')) {
+            trackView();
         }
     }, [projectId]);
 
@@ -88,9 +113,18 @@ export default function ProjectDetailClient({ projectId, initialProject, locale 
                         <h1 className="text-4xl md:text-6xl font-black uppercase tracking-tight mb-2">
                             {project.title?.[locale] || 'Untitled'}
                         </h1>
-                        <p className="text-xl text-gray-400 font-light">
-                            {project.studentName?.[locale] || 'Anonymous'}
-                        </p>
+                        <div className="flex flex-wrap gap-x-4 gap-y-2 mt-4">
+                            {project.members?.map((member, i) => (
+                                <p key={i} className="text-xl text-gray-400 font-light flex items-center gap-2">
+                                    {member.name[locale] || 'Anonymous'}
+                                    {/* Quick Socials next to name in header if only one member, or keep it clean? Let's show icons below in credits. */}
+                                </p>
+                            )) || (
+                                    <p className="text-xl text-gray-400 font-light">
+                                        {project.studentName?.[locale] || 'Anonymous'}
+                                    </p>
+                                )}
+                        </div>
                     </div>
 
                     <div className="border-t border-white/10 pt-8">
@@ -135,6 +169,45 @@ export default function ProjectDetailClient({ projectId, initialProject, locale 
                                     Available
                                 </div>
                             </div>
+                        </div>
+                    </div>
+
+                    {/* Members & Socials */}
+                    <div>
+                        <div className="text-xs text-gray-500 uppercase tracking-widest mb-4">Team & Portfolios</div>
+                        <div className="space-y-4">
+                            {project.members?.map((member, i) => (
+                                <div key={i} className="bg-white/5 p-4 rounded-lg border border-white/5 hover:border-white/10 transition-colors">
+                                    <div className="text-sm font-bold mb-3">{member.name[locale]}</div>
+                                    <div className="flex flex-wrap gap-3">
+                                        {member.links.behance && (
+                                            <a href={member.links.behance} target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-blue-400 transition-colors" title="Behance">
+                                                <ExternalLink size={18} />
+                                            </a>
+                                        )}
+                                        {member.links.instagram && (
+                                            <a href={member.links.instagram} target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-pink-400 transition-colors" title="Instagram">
+                                                <Instagram size={18} />
+                                            </a>
+                                        )}
+                                        {member.links.artstation && (
+                                            <a href={member.links.artstation} target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-orange-400 transition-colors" title="ArtStation">
+                                                <div className="w-[18px] h-[18px] flex items-center justify-center font-black text-[10px] border border-current rounded-sm">A</div>
+                                            </a>
+                                        )}
+                                        {member.links.website && (
+                                            <a href={member.links.website} target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-white transition-colors" title="Portfolio / Website">
+                                                <Globe size={18} />
+                                            </a>
+                                        )}
+                                        {member.links.email && (
+                                            <a href={`mailto:${member.links.email}`} className="text-gray-400 hover:text-green-400 transition-colors" title="Email">
+                                                <Mail size={18} />
+                                            </a>
+                                        )}
+                                    </div>
+                                </div>
+                            ))}
                         </div>
                     </div>
 

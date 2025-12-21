@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { optimizeCloudinary } from '@/lib/cloudinary';
 
 interface ImageUploadProps {
     label: string;
@@ -65,7 +66,7 @@ export default function ImageUpload({ label, value, onChange, folder = 'uploads'
             <label className="block text-sm font-medium mb-1">{label}</label>
             <div className="flex items-center gap-4">
                 {value && (
-                    <img src={value} alt="Preview" className="h-20 w-32 object-cover rounded border border-gray-600" />
+                    <img src={optimizeCloudinary(value, { width: 320 })} alt="Preview" className="h-20 w-32 object-cover rounded border border-gray-600" />
                 )}
                 <div className="flex-1">
                     <input

@@ -1,3 +1,15 @@
+export interface Member {
+    name: { en: string; ja: string; zh: string; ko: string };
+    links: {
+        behance?: string;
+        artstation?: string;
+        instagram?: string;
+        github?: string;
+        website?: string;
+        email?: string;
+    };
+}
+
 export interface Project {
     id?: string;
     // Metadata
@@ -8,7 +20,13 @@ export interface Project {
     // Content (Multi-language)
     title: { en: string; ja: string; zh: string; ko: string };
     description: { en: string; ja: string; zh: string; ko: string };
-    studentName: { en: string; ja: string; zh: string; ko: string };
+
+    // Member Info
+    members: Member[];
+
+    // Legacy / Backwards Compatibility
+    studentName?: { en: string; ja: string; zh: string; ko: string };
+    teamMembers?: string[];
 
     // Search & Filter
     year: number;
@@ -22,8 +40,6 @@ export interface Project {
     trailerYoutubeId: string;
     fullYoutubeId: string;
     artworkUrls: string[];
-
-    teamMembers: string[];
 
     // Ownership & Permissions
     createdBy?: string;  // User UID who created this project
@@ -39,7 +55,10 @@ export const INITIAL_PROJECT_STATE: Omit<Project, 'id' | 'createdAt' | 'updatedA
     priority: 0,
     title: { en: '', ja: '', zh: '', ko: '' },
     description: { en: '', ja: '', zh: '', ko: '' },
-    studentName: { en: '', ja: '', zh: '', ko: '' },
+    members: [{
+        name: { en: '', ja: '', zh: '', ko: '' },
+        links: {}
+    }],
     year: new Date().getFullYear(),
     genres: [],
     technique: [],
@@ -48,7 +67,6 @@ export const INITIAL_PROJECT_STATE: Omit<Project, 'id' | 'createdAt' | 'updatedA
     trailerYoutubeId: '',
     fullYoutubeId: '',
     artworkUrls: [],
-    teamMembers: [],
     createdBy: undefined,
     createdByEmail: undefined
 };
