@@ -5,6 +5,7 @@ import { motion } from 'framer-motion';
 import { Project } from '@/types/project';
 import { useInView } from 'react-intersection-observer';
 import { Link } from '@/i18n/navigation';
+import { optimizeCloudinary } from '@/lib/cloudinary';
 
 interface FeedCardProps {
     project: Project;
@@ -47,7 +48,7 @@ export default function FeedCard({ project, locale }: FeedCardProps) {
                     {/* Thumbnail */}
                     <div
                         className={`absolute inset-0 bg-cover bg-center transition-opacity duration-700 ${isPlaying ? 'opacity-0' : 'opacity-100'}`}
-                        style={{ backgroundImage: `url(${project.thumbnailUrl || 'https://images.unsplash.com/photo-1614728263952-84ea256f9679?q=80&w=800&auto=format&fit=crop'})` }}
+                        style={{ backgroundImage: `url(${optimizeCloudinary(project.thumbnailUrl, { width: 800 }) || 'https://images.unsplash.com/photo-1614728263952-84ea256f9679?q=80&w=800&auto=format&fit=crop'})` }}
                     >
                         <div className="absolute inset-0 bg-black/40 group-hover:bg-black/10 transition-colors" />
                     </div>

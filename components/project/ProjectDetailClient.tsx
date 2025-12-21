@@ -6,6 +6,7 @@ import { Link } from '@/i18n/navigation';
 import { ArrowLeft } from 'lucide-react';
 import { MOCK_DATA } from '@/data/projects_v2';
 import ImageModal from '@/components/common/ImageModal';
+import { optimizeCloudinary } from '@/lib/cloudinary';
 
 
 interface ProjectDetailProps {
@@ -107,10 +108,10 @@ export default function ProjectDetailClient({ projectId, initialProject, locale 
                                 {artworks.map((url, i) => (
                                     <div key={url} className="break-inside-avoid">
                                         <img
-                                            src={url}
+                                            src={optimizeCloudinary(url, { width: 1200 })}
                                             alt={`${project.title?.[locale]} - Artwork ${i + 1}`}
                                             className="w-full rounded-lg bg-neutral-900 hover:opacity-90 hover:scale-[1.02] transition-all cursor-pointer"
-                                            onClick={() => openModal(url, `${project.title?.[locale]} - Artwork ${i + 1}`)}
+                                            onClick={() => openModal(optimizeCloudinary(url, { width: 1920 }), `${project.title?.[locale]} - Artwork ${i + 1}`)}
                                         />
                                     </div>
                                 ))}
