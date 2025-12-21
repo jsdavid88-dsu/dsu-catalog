@@ -2,7 +2,6 @@
 
 import { X } from 'lucide-react';
 import { useEffect } from 'react';
-import Image from 'next/image';
 
 interface ImageModalProps {
     isOpen: boolean;
@@ -49,14 +48,11 @@ export default function ImageModal({ isOpen, imageSrc, imageAlt, onClose }: Imag
                 className="relative max-w-7xl max-h-[90vh] w-full h-full flex items-center justify-center"
                 onClick={(e) => e.stopPropagation()}
             >
-                <Image
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
                     src={imageSrc}
                     alt={imageAlt}
-                    width={1920}
-                    height={1080}
-                    className="object-contain w-full h-full rounded-lg"
-                    quality={95}
-                    priority
+                    className="object-contain max-w-full max-h-[90vh] rounded-lg"
                 />
             </div>
 
