@@ -23,10 +23,19 @@ service cloud.firestore {
     
     // Users collection (for role management)
     match /users/{userId} {
-      // Authenticated users can read their own role
+      // Authenticated users can read all user profiles
       allow read: if request.auth != null;
-      // Only admins can create/modify user roles (managed via Firebase Console)
-      allow write: if false;
+      
+      // Users can create their own document (on first login)
+      allow create: if request.auth != null && request.auth.uid == userId;
+      
+      // Only admins can modify user roles
+      allow update: if request.auth != null 
+        && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+      
+      // Only admins can delete users
+      allow delete: if request.auth != null 
+        && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
     }
   }
 }
