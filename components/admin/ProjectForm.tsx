@@ -71,7 +71,7 @@ export default function ProjectForm({ initialData }: ProjectFormProps) {
     };
 
     const handleAutoTranslate = async () => {
-        if (!project.title.ko && !project.description.ko && project.members.every(m => !m.name.ko)) {
+        if (!project.title.ko && !project.description.ko && (project.members || []).every(m => !m.name.ko)) {
             alert("Please enter Korean text first.");
             return;
         }
@@ -111,7 +111,7 @@ export default function ProjectForm({ initialData }: ProjectFormProps) {
             }
 
             // Translate Member Names
-            const updatedMembers = [...project.members];
+            const updatedMembers = [...(project.members || [])];
             for (let i = 0; i < updatedMembers.length; i++) {
                 if (updatedMembers[i].name.ko) {
                     const res = await fetch('/api/translate', {
@@ -144,7 +144,7 @@ export default function ProjectForm({ initialData }: ProjectFormProps) {
         try {
             // Basic validation
             if (!project.title.ko) throw new Error("Korean title is required");
-            if (project.members.some(m => !m.name.ko)) throw new Error("All members must have names (Korean)");
+            if ((project.members || []).some(m => !m.name.ko)) throw new Error("All members must have names (Korean)");
 
             // Mock Data Save for Test Account
             const isMock = localStorage.getItem('mockUser');
@@ -311,7 +311,7 @@ export default function ProjectForm({ initialData }: ProjectFormProps) {
                             type="button"
                             onClick={() => setProject(p => ({
                                 ...p,
-                                members: [...p.members, { name: { en: '', ja: '', zh: '', ko: '' }, links: {} }]
+                                members: [...(p.members || []), { name: { en: '', ja: '', zh: '', ko: '' }, links: {} }]
                             }))}
                             className="text-xs bg-blue-600 hover:bg-blue-500 text-white px-3 py-1 rounded flex items-center gap-1 transition-colors"
                         >
@@ -320,14 +320,14 @@ export default function ProjectForm({ initialData }: ProjectFormProps) {
                     </div>
 
                     <div className="space-y-6">
-                        {project.members.map((member, idx) => (
+                        {(project.members || []).map((member, idx) => (
                             <div key={idx} className="bg-neutral-800/50 p-4 rounded-lg border border-neutral-700 space-y-4 relative group">
-                                {project.members.length > 1 && (
+                                {(project.members || []).length > 1 && (
                                     <button
                                         type="button"
                                         onClick={() => setProject(p => ({
                                             ...p,
-                                            members: p.members.filter((_, i) => i !== idx)
+                                            members: (p.members || []).filter((_, i) => i !== idx)
                                         }))}
                                         className="absolute top-4 right-4 text-red-500 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity"
                                     >
@@ -343,7 +343,7 @@ export default function ProjectForm({ initialData }: ProjectFormProps) {
                                             className="w-full bg-neutral-700 border border-neutral-600 rounded p-2 text-sm outline-none focus:border-blue-500"
                                             value={member.name[activeTab]}
                                             onChange={(e) => {
-                                                const newMembers = [...project.members];
+                                                const newMembers = [...(project.members || [])];
                                                 newMembers[idx].name[activeTab] = e.target.value;
                                                 setProject(prev => ({ ...prev, members: newMembers }));
                                             }}
@@ -362,7 +362,7 @@ export default function ProjectForm({ initialData }: ProjectFormProps) {
                                                 placeholder="Behance URL"
                                                 value={member.links.behance || ''}
                                                 onChange={(e) => {
-                                                    const newMembers = [...project.members];
+                                                    const newMembers = [...(project.members || [])];
                                                     newMembers[idx].links.behance = e.target.value;
                                                     setProject(prev => ({ ...prev, members: newMembers }));
                                                 }}
@@ -373,7 +373,7 @@ export default function ProjectForm({ initialData }: ProjectFormProps) {
                                                 placeholder="Instagram URL"
                                                 value={member.links.instagram || ''}
                                                 onChange={(e) => {
-                                                    const newMembers = [...project.members];
+                                                    const newMembers = [...(project.members || [])];
                                                     newMembers[idx].links.instagram = e.target.value;
                                                     setProject(prev => ({ ...prev, members: newMembers }));
                                                 }}
@@ -384,7 +384,7 @@ export default function ProjectForm({ initialData }: ProjectFormProps) {
                                                 placeholder="ArtStation URL"
                                                 value={member.links.artstation || ''}
                                                 onChange={(e) => {
-                                                    const newMembers = [...project.members];
+                                                    const newMembers = [...(project.members || [])];
                                                     newMembers[idx].links.artstation = e.target.value;
                                                     setProject(prev => ({ ...prev, members: newMembers }));
                                                 }}
@@ -395,7 +395,7 @@ export default function ProjectForm({ initialData }: ProjectFormProps) {
                                                 placeholder="Personal Website / Other"
                                                 value={member.links.website || ''}
                                                 onChange={(e) => {
-                                                    const newMembers = [...project.members];
+                                                    const newMembers = [...(project.members || [])];
                                                     newMembers[idx].links.website = e.target.value;
                                                     setProject(prev => ({ ...prev, members: newMembers }));
                                                 }}
@@ -573,6 +573,6 @@ export default function ProjectForm({ initialData }: ProjectFormProps) {
                 </button>
             </div>
 
-        </form>
+        </form >
     );
 }

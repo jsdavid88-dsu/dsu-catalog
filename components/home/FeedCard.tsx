@@ -31,8 +31,8 @@ export default function FeedCard({ project, locale }: FeedCardProps) {
     const title = getSafeValue(project.title, locale, 'Untitled Project');
 
     // Member names logic
-    const memberNames = project.members?.length > 0
-        ? project.members.map(m => getSafeValue(m.name, locale)).join(', ')
+    const memberNames = (project.members ?? []).length > 0
+        ? (project.members ?? []).map(m => getSafeValue(m.name, locale)).join(', ')
         : getSafeValue(project.studentName, locale, 'Anonymous');
 
     const student = memberNames;

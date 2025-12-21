@@ -22,7 +22,7 @@ export interface Project {
     description: { en: string; ja: string; zh: string; ko: string };
 
     // Member Info
-    members: Member[];
+    members?: Member[];
 
     // Legacy / Backwards Compatibility
     studentName?: { en: string; ja: string; zh: string; ko: string };
